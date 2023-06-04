@@ -53,6 +53,33 @@ router.get("/search", async (req, res) => {
     res.status(500).json({ msg: "There is an error, please try again later", err });
   }
 });
+
+// localhost:3000/toys/prices/?min=20&max=100
+router.get("/prices", async (req, res) => {
+
+  let min = req.query.min || 0;
+  let max = req.query.max || Infinity;
+  let perPage = req.query.perPage || 10;
+  let page = req.query.page || 1;
+  let reverse = req.query.reverse == "yes" ? -1 : 1;
+  let sort = req.query.sort || "price";
+
+  try {
+    let data = await ToyModel
+      .find({ price: { $gte: min, $lte: max } })
+      .limit(perPage)
+      .skip((page - 1) * perPage)
+      .sort({ [sort]: reverse })
+
+    res.json(data);
+  }
+
+  catch (err) {
+    console.log(err)
+    res.status(500).json({ msg: "err", err })
+  }
+})
+
 // http://localhost:3000/toys/category/Doll
 router.get("/category/:catname", async (req, res) => {
 
@@ -74,6 +101,22 @@ router.get("/category/:catname", async (req, res) => {
   }
 
 });
+
+// http://localhost:3000/toys/single/647a003290fa7f51e99114a4
+router.get("/single/:id", async (req, res) => {
+
+  try {
+    let id = req.params.id;
+    let data = await ToyModel.findById(id);
+    res.json(data);
+  }
+
+  catch (err) {
+    console.log(err);
+    res.status(500).json({ msg: "There is an error, please try again later", err });
+  }
+
+})
 
 // http://localhost:3000/toys   -> send token
 router.post("/", auth, async (req, res) => {
@@ -130,48 +173,6 @@ router.delete("/:idDel", auth, async (req, res) => {
     console.log(err)
     res.status(500).json({ msg: "err", err })
   }
-})
-
-// localhost:3000/toys/prices/?min=20&max=100
-router.get("/prices", async (req, res) => {
-
-  let min = req.query.min || 0;
-  let max = req.query.max || Infinity;
-  let perPage = req.query.perPage || 10;
-  let page = req.query.page || 1;
-  let reverse = req.query.reverse == "yes" ? -1 : 1;
-  let sort = req.query.sort || "price";
-
-  try {
-    let data = await ToyModel
-      .find({ price: { $gte: min, $lte: max } })
-      .limit(perPage)
-      .skip((page - 1) * perPage)
-      .sort({ [sort]: reverse })
-
-    res.json(data);
-  }
-
-  catch (err) {
-    console.log(err)
-    res.status(500).json({ msg: "err", err })
-  }
-})
-
-// http://localhost:3000/toys/single/647a003290fa7f51e99114a4
-router.get("/single/:id", async (req, res) => {
-
-  try {
-    let id = req.params.id;
-    let data = await ToyModel.findById(id);
-    res.json(data);
-  }
-
-  catch (err) {
-    console.log(err);
-    res.status(500).json({ msg: "There is an error, please try again later", err });
-  }
-
 })
 
 module.exports = router;
