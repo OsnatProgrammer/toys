@@ -83,17 +83,26 @@ router.post("/login", async (req, res) => {
 })
 
 // http://localhost:3000/users/:idDel     -> send token admin
-router.delete("/:idDel", authadmin, async (req, res) => {
+router.delete("/:idDel", auth, async (req, res) => {
   try {
-
-    let data = await UserModel.deleteOne({ _id: req.params.idDel });
-    res.json(data);
-
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ msg: "Error", err });
+      let idDel = req.params.idDel;
+      let data;
+      if (req.tokenData.role == "admin") {
+          data = await UserModel.deleteOne({ _id: idDel })
+      }
+      else if (idDel == req.tokenData._id) {
+        data = await UserModel.deleteOne({ _id: idDel})
+      }
+      else {
+        return res.status(401).json({ msg: "Sorry, you do not have permission to update" });
+      }
+      res.json(data);
   }
-});
+  catch (err) {
+      console.log(err);
+      res.status(500).json({ msg: "there error try again later", err })
+  }
+})
 
 // http://localhost:3000/users/:idEdit     -> send token admin or user
 router.put("/:editId", auth, async (req, res) => {
@@ -111,7 +120,7 @@ router.put("/:editId", auth, async (req, res) => {
       data = await UserModel.updateOne({ _id: editId }, req.body)
     }
     else if (editId == req.tokenData._id) {
-      data = await UserModel.updateOne({ _id: editId, user_id: req.tokenData._id }, req.body)
+      data = await UserModel.updateOne({ _id:req.tokenData._id }, req.body)
     }
     else {
       return res.status(401).json({ msg: "Sorry, you do not have permission to update" });
